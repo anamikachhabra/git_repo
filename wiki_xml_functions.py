@@ -4,10 +4,11 @@ import datetime #for handling dates
 import dateutil.parser as parser
 import matplotlib.pyplot as plt
 import csv
+import json
+import pickle
+# from lxml import etree as ET
 
 
-
-NSMAP = {'mw':'http://www.mediawiki.org/xml/export-0.10/'}
 
 
 def init(filename):
@@ -114,26 +115,61 @@ def count_revisions_per_year(path):
 	dict_year_rev = {}
 	c = total_files_in_folder(path)
 	for i in range(1, c):
-		print 'hi'
-		print path+str(i)+'.xml'
+		# print path+str(i)+'.xml'
 		do_something(path+str(i)+'.xml', dict_year_rev)
-	print dict_year_rev
+#	print dict_year_rev
+	#f = open('out10.txt','w')
+	#f.write(dict_year_rev, '\n') # ... etc.
+	json.dump(dict_year_rev, open("text.txt",'w'))
+
 
 	
 
 def do_something(filename, dict_year_rev):
 	root = init(filename)
-	print 'test'
-	for t in root.findall('.//mw:timestamp', namespaces=NSMAP):
+	# print 'test'
+	for t in root.findall('.//{http://www.mediawiki.org/xml/export-0.10/}timestamp'):
+		# print 'hi'
 		# print t.text
 		x = parser.parse(t.text).year
 		if x in dict_year_rev.keys():
 			dict_year_rev[x]+=1
 		else:
 			dict_year_rev[x] = 1
-	writer1 = csv.writer(open("year_and_revisions.csv", "w")) #To store the dictionary in a csv file
-	for key, val in dict_year_rev.items():
-   		writer1.writerow([key, val])
+	return dict_year_rev
+	
+	#writer1 = csv.writer(open("year_and_revisions.csv", "w")) #To store the dictionary in a csv file
+	#for key, val in dict_year_rev.items():
+   	#	writer1.writerow([key, val])
+
+def contribution(path):
+	dict_contri = {}
+	c = total_files_in_folder(path)
+	for i in range(1, c):
+		# print path+str(i)+'.xml'
+		update_contri(path+str(i)+'.xml', dict_contri)
+	#print dict_contri
+	#json.dump(dict_contri, open("contribution.txt",'w'))
+
+	with open('contribution_pkl.txt', 'wb') as handle:
+		pickle.dump(dict_contri, handle)
+
+
+
+def update_contri(filename, dict_contri):
+	root = init(filename)
+	# print 'test'
+	for t in root.findall('.//{http://www.mediawiki.org/xml/export-0.10/}contributor'):
+		#print t[0].text
+		x=t[0].text
+		if x in dict_contri.keys():
+			dict_contri[x]+=1
+		else:
+			dict_contri[x] = 1
+	return dict_contri
+
+
+
 
 
 def main():
@@ -145,13 +181,11 @@ def main():
 	# rename_all_files()
 
 	# count_revisions_per_year(path)
-	count_revisions_per_year(path)
+	#count_revisions_per_year(path)
+	contribution(path)
+
 
 
 main()
 
-
-
-
-	
 
